@@ -257,13 +257,22 @@ class HP:
         self.image = self.font.render(f"HP: {self.value}", 0, self.color)
         screen.blit(self.image, self.rect)
 
-class Heal:
-    def heal(self):
-        """
-        こうかとんの体力を回復させるメソッド
-        """
-        if self.current_hp < self.max_hp:
-            self.current_hp += 1
+class Heal(pg.sprite.Sprite):
+    """
+    回復アイテムに関するクラス
+    """
+    def __init__(self):
+        super().__init__()
+        self.image = pg.Surface((30, 30))
+        self.image.fill((0, 255, 0))  # 緑色
+        self.rect = self.image.get_rect()
+        self.rect.center = random.randint(0, WIDTH), 0
+        self.vy = 4
+
+    def update(self):
+        self.rect.move_ip(0, self.vy)
+        if self.rect.top > HEIGHT:
+            self.kill()
 
 def main():
     pg.display.set_caption("真！こうかとん無双")
@@ -277,6 +286,8 @@ def main():
     beams = pg.sprite.Group()
     exps = pg.sprite.Group()
     emys = pg.sprite.Group()
+    heals = pg.sprite.Group()
+
 
     tmr = 0
     clock = pg.time.Clock()
@@ -291,6 +302,9 @@ def main():
 
         if tmr%200 == 0:  # 200フレームに1回，敵機を出現させる
             emys.add(Enemy())
+
+        if tmr % 500 == 0: # 500フレームに1回，回復アイテムを出現させる
+            heals.add(Heal())
 
         for emy in emys:
             if emy.state == "stop" and tmr%emy.interval == 0:
@@ -328,6 +342,11 @@ def main():
                 time.sleep(2)
                 return
 
+        for heal in pg.sprite.spritecollide(bird, heals, True):
+            if hp.value < 5:
+                hp.value += 1
+
+
         hp.update(screen)
         bird.update(key_lst, screen)
         beams.update()
@@ -339,6 +358,8 @@ def main():
         exps.update()
         exps.draw(screen)
         score.update(screen)
+        heals.update()
+        heals.draw(screen)
         pg.display.update()
         tmr += 1
         clock.tick(50)

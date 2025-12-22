@@ -6,8 +6,8 @@ import time
 import pygame as pg
 
 
-WIDTH = 1100  # ゲームウィンドウの幅
-HEIGHT = 650  # ゲームウィンドウの高さ
+WIDTH = 550  # ゲームウィンドウの幅
+HEIGHT = 750  # ゲームウィンドウの高さ
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 
@@ -242,13 +242,52 @@ class Score:
         screen.blit(self.image, self.rect)
 
 
+class Sound:
+    """
+    サウンド管理クラス
+    他の機能を搭載したときに音声を流す
+    """
+    def __init__(self):
+        self.enemy_kill = pg.mixer.Sound("sound/explosion.mp3")  # 敵を倒したときの音
+        self.damage = pg.mixer.Sound("sound/damage.mp3")  # 被ダメ時の音声
+        self.death = pg.mixer.Sound("sound/himei.mp3")  # 自分が倒された時の音声
+        self.level_up = pg.mixer.Sound("sound/level_up.mp3")  # レベルが上がった時の音
+        self.recovery = pg.mixer.Sound("sound/recovery.mp3")  # 回復した時の音  
+
+        pg.mixer.music.load("sound/bgm.mp3")  # bgm
+
+    def play_bgm(self):
+        pg.mixer.music.play(loops=-1)
+
+    def stop_bgm(self):  # 自分が倒されたときにbgmをとめる
+        pg.mixer.music.stop()
+
+    def play_enemy_kill(self):
+        self.enemy_kill.play()
+
+    def play_damage(self):
+        self.damage.play()
+
+    def play_death(self):
+        self.death.play()
+
+    def play_level_up(self):
+        self.level_up.play()
+
+    def play_recovery(self):
+        self.recovery.play()
+
+
+
 def main():
     pg.display.set_caption("真！こうかとん無双")
     screen = pg.display.set_mode((WIDTH, HEIGHT))
-    bg_img = pg.image.load(f"fig/pg_bg.jpg")
+    bg_img = pg.image.load(f"fig/universe.jpg")
     score = Score()
+    sounds = Sound()
+    sounds.play_bgm()
 
-    bird = Bird(3, (900, 400))
+    bird = Bird(3, (225, 400))
     bombs = pg.sprite.Group()
     beams = pg.sprite.Group()
     exps = pg.sprite.Group()
@@ -274,6 +313,7 @@ def main():
                 bombs.add(Bomb(emy, bird))
 
         for emy in pg.sprite.groupcollide(emys, beams, True, True).keys():  # ビームと衝突した敵機リスト
+            sounds.play_enemy_kill()
             exps.add(Explosion(emy, 100))  # 爆発エフェクト
             score.value += 10  # 10点アップ
             bird.change_img(6, screen)  # こうかとん喜びエフェクト
